@@ -1,4 +1,6 @@
-﻿using IdentityServer3.Core.Models;
+﻿using BlogCMS.Data;
+using BlogCMS.Models.Entities;
+using IdentityServer3.Core.Models;
 using IdentityServer3.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +19,14 @@ namespace BlogCMS.Controllers
     {
         public static User user = new User();
 
-      
+
+        //private readonly DataContext dbContext;
+        //public AuthController(DataContext dbContext)
+        //{
+        //    this.dbContext = dbContext;
+
+        //}
+
         private readonly IConfiguration _configuration;
         private readonly Services.UserService.IUserService _userService;
 
@@ -27,7 +36,8 @@ namespace BlogCMS.Controllers
             _userService = userService;
         }
 
-        [HttpGet, Authorize]
+        [HttpGet,Authorize]
+        //[Authorize(Roles = "Admin")]
         public ActionResult<string> GetMe()
         {
             var userName = _userService.GetMyName();
@@ -43,6 +53,8 @@ namespace BlogCMS.Controllers
             user.Username = request.Username;
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
+
+
 
             return Ok(user);
         }
@@ -64,6 +76,28 @@ namespace BlogCMS.Controllers
 
             return Ok(token);
         }
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<string>> RefreshToken()
+        {
+            var refreshToken = Request.Cookies["refreshToken"];
+
+            if (!user.RefreshToken.Equals(refreshToken))
+            {
+                return Unauthorized("Invalid Refresh Token");
+            }
+            else if (user.TokenExpires < DateTime.Now)
+            {
+                return Unauthorized("Token Expired");
+            }
+
+            string token = CreateToken(user);
+            var newRefreshToken= GenerateRefreshToken();
+            SetRefreshToken(newRefreshToken);
+
+            return Ok(token);   
+        }
+
+
 
         private RefreshToken GenerateRefreshToken()
         {
