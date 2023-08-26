@@ -5,6 +5,7 @@ using IdentityServer3.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -37,14 +38,26 @@ namespace BlogCMS.Controllers
         }
 
         [HttpGet,Authorize]
-        //[Authorize(Roles = "Admin")]
+        [Authorize]/*(Roles = "Admin")*/
         public ActionResult<string> GetMe()
         {
             var userName = _userService.GetMyName();
             return Ok(userName);
         }
+        //    public async Task<IActionResult> GetMe()
+        //{
+        //    var userName = await dbContext.Users.ToListAsync();
+        //    return Ok(userName);
+        //}
 
 
+        //public async Task<IActionResult> GetAllPosts()
+        //{
+        //    var posts = await dbContext.Posts.ToListAsync();
+
+        //    return Ok(posts);
+
+        //}
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserDto request)
         {
@@ -128,7 +141,7 @@ namespace BlogCMS.Controllers
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin"),
+                //new Claim(ClaimTypes.Role, "Admin"),
 
             };
 
